@@ -1,11 +1,11 @@
 # 📝 Relatório Técnico de Laboratório
 
 ## 1. Informações do grupo
-- ** Curso:** Engenharia de Software
-- ** Disciplina:** Laboratório de Experimentação de Software
-- ** Período:** 6° Período
-- ** Professor(a):** Prof. Wesley Dias Maciel
-- ** Membros do Grupo:** Sophia Mendes, Thiago Andrade
+- **Curso:** Engenharia de Software
+- **Disciplina:** Laboratório de Experimentação de Software
+- **Período:** 6° Período
+- **Professor(a):** Prof. Wesley Dias Maciel
+- **Membros do Grupo:** Sophia Mendes, Thiago Andrade
 
 ---
 
