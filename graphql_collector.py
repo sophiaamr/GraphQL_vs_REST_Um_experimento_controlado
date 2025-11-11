@@ -1,0 +1,182 @@
+import requests
+import time
+import os
+
+URL = "https://api.github.com/graphql"
+
+
+GRAPHQL_QUERY = """
+query ($owner: String!, $repo: String!) {
+  repository(owner: $owner, name: $repo) {
+    # 1. Dados básicos do repositório
+    name
+    description
+    url
+    stargazerCount
+    forkCount
+    watchers {
+      totalCount
+    }
+    openIssues: issues(states: [OPEN]) {
+      totalCount
+    }
+    createdAt
+    updatedAt
+    primaryLanguage {
+      name
+    }
+    licenseInfo {
+      name
+    }
+    repositoryTopics(first: 20) {
+      nodes {
+        topic {
+          name
+        }
+      }
+    }
+
+    # 2. Linguagens utilizadas
+    languages(first: 100, orderBy: {field: SIZE, direction: DESC}) {
+      edges {
+        size
+        node {
+          name
+        }
+      }
+    }
+
+    # 3. Issues abertas (60 mais recentes)
+    issues(first: 60, states: [OPEN], orderBy: {field: CREATED_AT, direction: DESC}) {
+      nodes {
+        title
+        number
+        state
+        createdAt
+        author {
+          login
+        }
+        labels(first: 10) {
+          nodes {
+            name
+          }
+        }
+      }
+    }
+
+    # 4. Pull Requests abertos (60 mais recentes)
+    pullRequests(first: 60, states: [OPEN], orderBy: {field: CREATED_AT, direction: DESC}) {
+      nodes {
+        title
+        number
+        state
+        createdAt
+        author {
+          login
+        }
+        mergeable 
+
+        # 4a. Reviews associados (aninhado!)
+        reviews(first: 10, states: [APPROVED, CHANGES_REQUESTED]) {
+          nodes {
+            state
+            author {
+              login
+            }
+          }
+        }
+      }
+    }
+
+    # 5. Commits recentes (60 últimos)
+    defaultBranchRef {
+      target {
+        ... on Commit {
+          history(first: 60) {
+            nodes {
+              committedDate
+              author {
+                name
+                email
+                user {
+                  login
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  } # <--- Fim do objeto 'repository'
+  
+  # Inclui dados de rate limit na resposta
+  rateLimit {
+    cost
+    remaining
+    resetAt
+  }
+}
+"""
+
+
+def fetch_graphql_data(owner: str, repo: str, token: str):
+    """
+    Coleta todos os dados definidos no experimento usando a API GraphQL v4.
+    Isso usa uma única chamada de rede.
+    """
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+        "Cache-Control": "no-cache",  
+    }
+
+    variables = {"owner": owner, "repo": repo}
+
+    try:
+        start_time = time.perf_counter()
+        response = requests.post(
+            URL, json={"query": GRAPHQL_QUERY, "variables": variables}, headers=headers
+        )
+        end_time = time.perf_counter()
+
+        total_time_ms = (end_time - start_time) * 1000
+        total_size_bytes = len(response.content)
+
+        response.raise_for_status()
+
+        json_data = response.json()
+
+        if "errors" in json_data:
+            raise requests.exceptions.RequestException(json_data["errors"])
+
+        if "data" in json_data and "rateLimit" in json_data["data"]:
+            remaining = json_data["data"]["rateLimit"]["remaining"]
+            if remaining < 200:
+                print(f"GraphQL rate limit baixo ({remaining}). Pausando por 60s...")
+                time.sleep(60)
+
+        return {
+            "repo": f"{owner}/{repo}",
+            "api_type": "GraphQL",
+            "response_time_ms": total_time_ms,
+            "response_size_bytes": total_size_bytes,
+            "num_requests": 1,
+            "status": "success",
+            "error_message": None,
+        }
+
+    except requests.exceptions.RequestException as e:
+        total_time_ms = (
+            (time.perf_counter() - start_time) * 1000 if "start_time" in locals() else 0
+        )
+        return {
+            "repo": f"{owner}/{repo}",
+            "api_type": "GraphQL",
+            "response_time_ms": total_time_ms,
+            "response_size_bytes": (
+                len(response.content) if "response" in locals() else 0
+            ),
+            "num_requests": 1,
+            "status": "error",
+            "error_message": str(e),
+        }
