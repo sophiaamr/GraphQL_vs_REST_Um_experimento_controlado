@@ -174,12 +174,6 @@ não apenas processamento da API
   medições. Tempo end-to-end é mais realista para desenvolvedores.
 
 
-3. **Definição de "mesma informação"**: Equivalência entre queries 
-pode ser subjetiva
-- **Mitigação**: Documentar claramente mapeamento entre campos 
-  REST e GraphQL. Validar que dados retornados são equivalentes.
-
-
 ---
 
 ## 3. Metodologia
