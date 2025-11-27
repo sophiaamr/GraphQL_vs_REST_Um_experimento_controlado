@@ -20,7 +20,6 @@ if not GITHUB_TOKEN:
 # ⚙️ PARÂMETROS CONFIGURÁVEIS PARA EXECUÇÃO INCREMENTAL
 NUM_REPOSITORIES = 60  # 🔧 ALTERE AQUI: 60, 70, 80, 90, 100 (fases do experimento)
 MIN_STARS = 50000  # Critério: repositórios com >= 50.000 estrelas
-REPETITIONS = 3  # Repetições para confiabilidade estatística
 PAUSE_INTERVAL_SEC = 1.5  # Intervalo entre requisições
 
 OUTPUT_FILE = f"experiment_results_phase_{NUM_REPOSITORIES}.csv"
@@ -61,15 +60,13 @@ def run_experiment():
     print(f"\n🔬 Iniciando experimento: GraphQL vs REST")
     print(f"Objetos: {len(repositories)} repositórios")
     print(f"Tratamentos: 2 (REST, GraphQL)")
-    print(f"Repetições: {REPETITIONS}")
-    print(f"Total de medições: {len(repositories) * 2 * REPETITIONS}")
+    print(f"Total de medições: {len(repositories) * 2}")
     print("--------------------------------------------------")
 
     experiment_plan = []
-    for _ in range(REPETITIONS):
-        for repo_full in repositories:
-            experiment_plan.append((repo_full, "REST"))
-            experiment_plan.append((repo_full, "GraphQL"))
+    for repo_full in repositories:
+        experiment_plan.append((repo_full, "REST"))
+        experiment_plan.append((repo_full, "GraphQL"))
 
     # Randomizar a ordem de execução
     print("🔀 Randomizando ordem de execução...")

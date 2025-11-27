@@ -64,8 +64,8 @@ query ($owner: String!, $repo: String!) {
       }
     }
 
-    # 4. Pull Requests abertos (60 mais recentes)
-    pullRequests(first: 60, states: [OPEN], orderBy: {field: CREATED_AT, direction: DESC}) {
+    # 4. Pull Requests abertos (10 mais recentes para coletar reviews)
+    pullRequests(first: 10, states: [OPEN], orderBy: {field: CREATED_AT, direction: DESC}) {
       nodes {
         title
         number
@@ -76,7 +76,7 @@ query ($owner: String!, $repo: String!) {
         }
         mergeable 
 
-        # 4a. Reviews associados (aninhado!)
+        # 4a. Reviews associados (até 10 por PR)
         reviews(first: 10, states: [APPROVED, CHANGES_REQUESTED]) {
           nodes {
             state
@@ -131,14 +131,30 @@ def fetch_graphql_data(owner: str, repo: str, token: str):
     """
     Coleta todos os dados definidos no experimento usando a API GraphQL v4.
     Isso usa uma única chamada de rede.
+    Também captura informações de rate limit para análise.
     """
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json",
-        "Cache-Control": "no-cache",  
+        "Cache-Control": "no-cache",
     }
 
     variables = {"owner": owner, "repo": repo}
+
+    # Capturar rate limit ANTES da requisição
+    rate_limit_before = None
+    try:
+        pre_check = requests.post(
+            URL,
+            json={"query": "{ rateLimit { remaining limit resetAt } }"},
+            headers=headers,
+        )
+        if pre_check.status_code == 200:
+            pre_data = pre_check.json()
+            if "data" in pre_data and "rateLimit" in pre_data["data"]:
+                rate_limit_before = pre_data["data"]["rateLimit"]["remaining"]
+    except:
+        pass  # Se falhar, continua sem o valor
 
     try:
         start_time = time.perf_counter()
@@ -157,11 +173,27 @@ def fetch_graphql_data(owner: str, repo: str, token: str):
         if "errors" in json_data:
             raise requests.exceptions.RequestException(json_data["errors"])
 
+        # Capturar rate limit DEPOIS da requisição
+        rate_limit_after = None
+        rate_limit_cost = None
+        rate_limit_reset = None
+
         if "data" in json_data and "rateLimit" in json_data["data"]:
-            remaining = json_data["data"]["rateLimit"]["remaining"]
-            if remaining < 200:
-                print(f"GraphQL rate limit baixo ({remaining}). Pausando por 60s...")
+            rate_limit_info = json_data["data"]["rateLimit"]
+            rate_limit_after = rate_limit_info.get("remaining")
+            rate_limit_cost = rate_limit_info.get("cost")
+            rate_limit_reset = rate_limit_info.get("resetAt")
+
+            if rate_limit_after and rate_limit_after < 200:
+                print(
+                    f"GraphQL rate limit baixo ({rate_limit_after}). Pausando por 60s..."
+                )
                 time.sleep(60)
+
+        # Calcular consumo
+        rate_limit_consumed = None
+        if rate_limit_before is not None and rate_limit_after is not None:
+            rate_limit_consumed = rate_limit_before - rate_limit_after
 
         return {
             "repo": f"{owner}/{repo}",
@@ -169,6 +201,11 @@ def fetch_graphql_data(owner: str, repo: str, token: str):
             "response_time_ms": total_time_ms,
             "response_size_bytes": total_size_bytes,
             "num_requests": 1,
+            "rate_limit_before": rate_limit_before,
+            "rate_limit_after": rate_limit_after,
+            "rate_limit_consumed": rate_limit_consumed,
+            "rate_limit_cost": rate_limit_cost,
+            "rate_limit_reset_at": rate_limit_reset,
             "status": "success",
             "error_message": None,
         }
@@ -185,6 +222,11 @@ def fetch_graphql_data(owner: str, repo: str, token: str):
                 len(response.content) if "response" in locals() else 0
             ),
             "num_requests": 1,
+            "rate_limit_before": rate_limit_before,
+            "rate_limit_after": None,
+            "rate_limit_consumed": None,
+            "rate_limit_cost": None,
+            "rate_limit_reset_at": None,
             "status": "error",
             "error_message": str(e),
         }

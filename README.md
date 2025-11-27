@@ -43,7 +43,14 @@ H1: Respostas GraphQL apresentam tamanho significativamente menor que REST
 
 **Tamanho da Resposta (bytes)**: Tamanho do payload da resposta em bytes
 
-**Número de requisições necessárias**
+**Número de requisições necessárias**: Quantidade de chamadas HTTP realizadas
+
+**Métricas de Rate Limit**:
+- Rate limit antes da requisição
+- Rate limit após a requisição
+- Rate limit consumido
+- Custo da query (GraphQL)
+- Timestamp de reset do rate limit
 
 ### 2.4. Variáveis independentes
 
@@ -79,7 +86,9 @@ Ambos os tratamentos coletam o mesmo conjunto de informações:
 - Data de criação
 - Autor (login)
 - Status de merge
-- **Reviews associados** (aninhado!)
+- **Reviews associados (apenas dos 10 primeiros PRs)**
+  - Limitação aplicada em ambas APIs para viabilidade de rate limit
+  - Até 10 reviews por PR
 - Estado do review (approved/changes_requested)
 - Revisor
 
@@ -93,12 +102,13 @@ Ambos os tratamentos coletam o mesmo conjunto de informações:
 
 ## 2.6. Objetos Experimentais
 
-**100 repositórios mais populares do GitHub**, selecionados por número de estrelas.
+**100 repositórios mais populares do GitHub**, selecionados dinamicamente via API.
 
 **Critério de seleção:**
 - Repositórios públicos  
 - Mínimo de 50.000 estrelas  
 - Ordenados por `stargazerCount` (decrescente)  
+- Buscados dinamicamente via GitHub Search API
 - Cada repositório será submetido a **ambos os tratamentos** (REST e GraphQL) em design *within-subjects*.
 
 ### Estrutura de Execução Incremental
@@ -139,19 +149,19 @@ Cada repositório é testado com **AMBAS** as APIs (GraphQL e REST)
 ## 2.8. Quantidade de Medições
 
 ### Estrutura de Medições
-**Repetições por condição:** 3 execuções
+Cada repositório será testado **1 vez** com cada API (REST e GraphQL)
 
 ## Medições por Fase
 
 | Fase | Repositórios | Cálculo        | Medições       |
 |------|--------------|----------------|----------------|
-| Fase 1 | 60  | 60 × 2 × 3 | **360 medições** |
-| Fase 2 | 70  | 70 × 2 × 3 | **420 medições** |
-| Fase 3 | 80  | 80 × 2 × 3 | **480 medições** |
-| Fase 4 | 90  | 90 × 2 × 3 | **540 medições** |
-| Fase 5 | 100 | 100 × 2 × 3 | **600 medições** |
+| Fase 1 | 60  | 60 × 2  | **120 medições** |
+| Fase 2 | 70  | 70 × 2  | **140 medições** |
+| Fase 3 | 80  | 80 × 2 | **160 medições** |
+| Fase 4 | 90  | 90 × 2 | **180 medições** |
+| Fase 5 | 100 | 100 × 2 | **200 medições** |
 
-### **Total acumulado: 2.400 medições**
+### **Total acumulado: 800 medições**
 
 
 ---
@@ -161,9 +171,12 @@ Cada repositório é testado com **AMBAS** as APIs (GraphQL e REST)
 ### **Validade Interna**
 
 #### Rate limiting progressivo
-**Problema:** 2.400 medições medições podem ultrapassar limites do GitHub.  
+**Problema:** 800 medições podem ultrapassar limites do GitHub.  
 **Mitigação:**  
-- Monitorar `/rate_limit`  
+- Captura automática de rate limit antes/depois de cada requisição
+- Registro de consumo de rate limit no CSV
+- Pausa automática quando rate limit < 200
+- Reviews limitados a 10 PRs no REST (redução de ~50 requisições/repo)
 - Análise incremental para detectar impacto
 
 #### Efeito de aprendizado entre fases
