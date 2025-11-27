@@ -6,6 +6,7 @@ from tqdm import tqdm
 from dotenv import load_dotenv
 import rest_collector
 import graphql_collector
+from repo_fetcher import fetch_top_repositories
 
 
 load_dotenv()
@@ -14,83 +15,64 @@ GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 if not GITHUB_TOKEN:
     raise ValueError("GITHUB_TOKEN não encontrado. Por favor, crie um .env")
 
-# --- 1. OBJETOS EXPERIMENTAIS ---
+# --- 1. CONFIGURAÇÕES DO EXPERIMENTO ---
 
-REPOSITORIES = [
-    "freeCodeCamp/freeCodeCamp",
-    "codecrafters-io/build-your-own-x",
-    "sindresorhus/awesome",
-    "public-apis/public-apis",
-    "EbookFoundation/free-programming-books",
-    "kamranahmedse/developer-roadmap",
-    "jwasham/coding-interview-university",
-    "donnemartin/system-design-primer",
-    "996icu/996.ICU",
-    "facebook/react",
-    "tensorflow/tensorflow",
-    "twbs/bootstrap",
-    "vuejs/vue",
-    "github/gitignore",
-    "microsoft/vscode",
-    "torvalds/linux",
-    "trekhleb/javascript-algorithms",
-    "openai/gpt-3",
-    "TheAlgorithms/Python",
-    "pallets/flask",
-    "airbnb/javascript",
-    "getify/You-Dont-Know-JS",
-    "golang/go",
-    "django/django",
-    "facebook/react-native",
-    "flutter/flutter",
-    "kubernetes/kubernetes",
-    "vercel/next.js",
-    "axios/axios",
-    "huggingface/transformers",
-    "microsoft/PowerToys",
-    "ohmyzsh/ohmyzsh",
-    "reduxjs/redux",
-    "prettier/prettier",
-    "nodejs/node",
-    "laravel/laravel",
-    "angular/angular",
-    "rust-lang/rust",
-    "NVIDIA/DeepLearningExamples",
-    "d3/d3",
-    "neovim/neovim",
-    "denoland/deno",
-    "lodash/lodash",
-    "facebook/jest",
-    "MarlinFirmware/Marlin",
-    "ant-design/ant-design",
-    "pytorch/pytorch",
-    "mrdoob/three.js",
-    "github/copilot-docs",
-]
+# ⚙️ PARÂMETROS CONFIGURÁVEIS PARA EXECUÇÃO INCREMENTAL
+NUM_REPOSITORIES = 60  # 🔧 ALTERE AQUI: 60, 70, 80, 90, 100 (fases do experimento)
+MIN_STARS = 50000  # Critério: repositórios com >= 50.000 estrelas
+REPETITIONS = 3  # Repetições para confiabilidade estatística
+PAUSE_INTERVAL_SEC = 1.5  # Intervalo entre requisições
 
-# --- 2. PROJETO EXPERIMENTAL ---
-REPETITIONS = 10
-OUTPUT_FILE = "experiment_results.csv"
-PAUSE_INTERVAL_SEC = 1.5
+OUTPUT_FILE = f"experiment_results_phase_{NUM_REPOSITORIES}.csv"
+
+
+# --- 2. BUSCAR REPOSITÓRIOS DINAMICAMENTE ---
+
+
+def get_repositories():
+    """
+    Busca os top repositórios dinamicamente da API do GitHub.
+    Retorna a quantidade definida em NUM_REPOSITORIES.
+    """
+    print(
+        f"📊 Configuração: {NUM_REPOSITORIES} repositórios, {MIN_STARS:,} estrelas mínimas"
+    )
+    print("=" * 70)
+
+    repositories = fetch_top_repositories(
+        token=GITHUB_TOKEN, num_repos=NUM_REPOSITORIES, min_stars=MIN_STARS
+    )
+
+    if len(repositories) < NUM_REPOSITORIES:
+        print(
+            f"⚠️ Aviso: Apenas {len(repositories)} repositórios encontrados (esperado: {NUM_REPOSITORIES})"
+        )
+
+    return repositories
 
 
 def run_experiment():
-    print(f"Iniciando experimento: GraphQL vs REST")
-    print(f"Objetos: {len(REPOSITORIES)} repositórios")
+    """
+    Executa o experimento completo: GraphQL vs REST
+    """
+    # Buscar repositórios dinamicamente
+    repositories = get_repositories()
+
+    print(f"\n🔬 Iniciando experimento: GraphQL vs REST")
+    print(f"Objetos: {len(repositories)} repositórios")
     print(f"Tratamentos: 2 (REST, GraphQL)")
     print(f"Repetições: {REPETITIONS}")
-    print(f"Total de medições: {len(REPOSITORIES) * 2 * REPETITIONS}")
+    print(f"Total de medições: {len(repositories) * 2 * REPETITIONS}")
     print("--------------------------------------------------")
 
     experiment_plan = []
     for _ in range(REPETITIONS):
-        for repo_full in REPOSITORIES:
+        for repo_full in repositories:
             experiment_plan.append((repo_full, "REST"))
             experiment_plan.append((repo_full, "GraphQL"))
 
     # Randomizar a ordem de execução
-
-    print("Randomizando ordem de execução...")
+    print("🔀 Randomizando ordem de execução...")
     random.shuffle(experiment_plan)
 
     results = []
@@ -124,16 +106,16 @@ def run_experiment():
 
     # --- 4. SALVAR RESULTADOS ---
     print("\n--------------------------------------------------")
-    print("Experimento concluído.")
+    print("✅ Experimento concluído.")
 
     df = pd.DataFrame(results)
 
     # Salvar em CSV
     df.to_csv(OUTPUT_FILE, index=False, encoding="utf-8")
-    print(f"Resultados salvos em: {OUTPUT_FILE}")
+    print(f"💾 Resultados salvos em: {OUTPUT_FILE}")
 
     # Mostrar um resumo
-    print("\nResumo dos Resultados (Médias):")
+    print("\n📊 Resumo dos Resultados (Médias):")
     df_success = df[df["status"] == "success"]
     if not df_success.empty:
         df_success["response_time_ms"] = pd.to_numeric(df_success["response_time_ms"])
@@ -149,10 +131,16 @@ def run_experiment():
         )
 
     errors = df[df["status"] != "success"]
-    print(f"\nTotal de medições com falha: {len(errors)}")
+    print(f"\n❌ Total de medições com falha: {len(errors)}")
     if not errors.empty:
         print(errors.groupby(["repo", "api_type"]).size())
 
 
 if __name__ == "__main__":
+    print("=" * 70)
+    print("🧪 EXPERIMENTO: GraphQL vs REST - API do GitHub")
+    print("=" * 70)
     run_experiment()
+    print("\n" + "=" * 70)
+    print("🎉 Execução finalizada!")
+    print("=" * 70)

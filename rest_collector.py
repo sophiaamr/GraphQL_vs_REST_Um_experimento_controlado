@@ -26,6 +26,7 @@ def fetch_rest_data(owner: str, repo: str, token: str):
         f"/repos/{owner}/{repo}/issues?state=open&per_page=60&page=1",
         f"/repos/{owner}/{repo}/pulls?state=open&per_page=60&page=1",
         f"/repos/{owner}/{repo}/commits?per_page=60&page=1",  # 5. Commits
+        f"/repos/{owner}/{repo}/contributors?per_page=20&page=1",  # 6. Contribuidores
     ]
 
     collected_data = {}

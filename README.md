@@ -64,8 +64,6 @@ Ambos os tratamentos coletam o mesmo conjunto de informações:
 - Contadores: estrelas, forks, watchers, open issues
 - Datas: criação, última atualização
 - Linguagem principal
-- Licença
-- Tópicos/tags
 
 **2. Linguagens utilizadas no repositório**
 - Lista completa de linguagens com percentuais
@@ -88,12 +86,10 @@ Ambos os tratamentos coletam o mesmo conjunto de informações:
 **5. Commits recentes (60 últimos)**
 
 - Autor (nome, email, login)
-- Data do commit
 
 
 **6. Contribuidores (20 principais)**
 - Login, nome
-- Número de contribuições
 
 ## 2.6. Objetos Experimentais
 
@@ -143,16 +139,20 @@ Cada repositório é testado com **AMBAS** as APIs (GraphQL e REST)
 ## 2.8. Quantidade de Medições
 
 ### Estrutura de Medições
-**Repetições por condição:** 10 execuções
+**Repetições por condição:** 3 execuções
 
-### Total por fase
-- Fase 1: 60 × 2 × 10 = **1.200 medições**  
-- Fase 2: 70 × 2 × 10 = **1.400 medições**  
-- Fase 3: 80 × 2 × 10 = **1.600 medições**  
-- Fase 4: 90 × 2 × 10 = **1.800 medições**  
-- Fase 5: 100 × 2 × 10 = **2.000 medições**  
+## Medições por Fase
 
-**Total acumulado:** **8.000 medições**
+| Fase | Repositórios | Cálculo        | Medições       |
+|------|--------------|----------------|----------------|
+| Fase 1 | 60  | 60 × 2 × 3 | **360 medições** |
+| Fase 2 | 70  | 70 × 2 × 3 | **420 medições** |
+| Fase 3 | 80  | 80 × 2 × 3 | **480 medições** |
+| Fase 4 | 90  | 90 × 2 × 3 | **540 medições** |
+| Fase 5 | 100 | 100 × 2 × 3 | **600 medições** |
+
+### **Total acumulado: 2.400 medições**
+
 
 ---
 
@@ -161,7 +161,7 @@ Cada repositório é testado com **AMBAS** as APIs (GraphQL e REST)
 ### **Validade Interna**
 
 #### Rate limiting progressivo
-**Problema:** 8.000 medições podem ultrapassar limites do GitHub.  
+**Problema:** 2.400 medições medições podem ultrapassar limites do GitHub.  
 **Mitigação:**  
 - Monitorar `/rate_limit`  
 - Análise incremental para detectar impacto
@@ -203,8 +203,7 @@ Cada repositório é testado com **AMBAS** as APIs (GraphQL e REST)
 
 #### Latência de rede
 **Mitigação:**
-- Mesma rede → condições equivalentes  
-- Métrica end-to-end é realista
+- Mesma rede = condições equivalentes 
 
 
 ---

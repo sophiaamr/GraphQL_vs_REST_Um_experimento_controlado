@@ -107,6 +107,14 @@ query ($owner: String!, $repo: String!) {
         }
       }
     }
+
+    # 6. Contribuidores (20 principais)
+    mentionableUsers(first: 20) {
+      nodes {
+        login
+        name
+      }
+    }
   } # <--- Fim do objeto 'repository'
   
   # Inclui dados de rate limit na resposta
