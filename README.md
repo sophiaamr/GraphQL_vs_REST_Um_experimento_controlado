@@ -176,7 +176,7 @@ Cada repositório será testado **1 vez** com cada API (REST e GraphQL)
 - Captura automática de rate limit antes/depois de cada requisição
 - Registro de consumo de rate limit no CSV
 - Pausa automática quando rate limit < 200
-- Reviews limitados a 10 PRs no REST (redução de ~50 requisições/repo)
+- Reviews limitados a 10 PRs no REST
 - Análise incremental para detectar impacto
 
 #### Efeito de aprendizado entre fases
