@@ -18,7 +18,7 @@ if not GITHUB_TOKEN:
 # --- 1. CONFIGURAÇÕES DO EXPERIMENTO ---
 
 # ⚙️ PARÂMETROS CONFIGURÁVEIS PARA EXECUÇÃO INCREMENTAL
-NUM_REPOSITORIES = 60  # 🔧 ALTERE AQUI: 60, 70, 80, 90, 100 (fases do experimento)
+NUM_REPOSITORIES = 80  # 🔧 ALTERE AQUI: 60, 70, 80, 90, 100 (fases do experimento)
 MIN_STARS = 50000  # Critério: repositórios com >= 50.000 estrelas
 PAUSE_INTERVAL_SEC = 1.5  # Intervalo entre requisições
 
