@@ -95,83 +95,116 @@ Ambos os tratamentos coletam o mesmo conjunto de informações:
 - Login, nome
 - Número de contribuições
 
-### 2.6. Objetos Experimentais
+## 2.6. Objetos Experimentais
 
-50 repositórios mais populares do GitHub, selecionados por número 
-de estrelas.
+**100 repositórios mais populares do GitHub**, selecionados por número de estrelas.
 
-Critério de seleção:
-- Repositórios públicos
-- Mínimo de 50.000 estrelas
-- Ordenados por stargazerCount (decrescente)
+**Critério de seleção:**
+- Repositórios públicos  
+- Mínimo de 50.000 estrelas  
+- Ordenados por `stargazerCount` (decrescente)  
+- Cada repositório será submetido a **ambos os tratamentos** (REST e GraphQL) em design *within-subjects*.
 
-Cada repositório será submetido a ambos os tratamentos (REST e GraphQL) em design within-subjects.
+### Estrutura de Execução Incremental
 
-### 2.7. Tipo de Projeto Experimental
+O experimento será executado em **5 fases progressivas** para permitir análise granular do comportamento das APIs em diferentes escalas:
 
-**Design: Within-Subjects (Medidas Repetidas)**
+| Fase | Repositórios | Objetivo |
+|------|--------------|----------|
+| Fase 1 | 60 | Baseline inicial |
+| Fase 2 | 70 | Incremento de 10 repos |
+| Fase 3 | 80 | Incremento de 10 repos |
+| Fase 4 | 90 | Incremento de 10 repos |
+| Fase 5 | 100 | Dataset completo |
 
-Cada repositório é testado com AMBAS as APIs (GraphQL e REST), 
-servindo como seu próprio controle. Isso elimina variabilidade 
-entre repositórios e aumenta o poder estatístico do experimento.
+### Justificativa da abordagem incremental
+- Identificar pontos de inflexão no desempenho   
+- Detectar degradação progressiva em tempo ou tamanho  
+- Permitir análise comparativa entre APIs em diferentes volumes  
 
-**Estrutura:**
-- Cada repositório → testado com REST (T1)
-- Cada repositório → testado com GraphQL (T2)
-- Ordem de execução: completamente randomizada
-- Intervalo entre requisições: 1-2 segundos
+---
 
-**Combinações:**
-- 50 repositórios × 2 tratamentos = 100 condições únicas
-- Cada condição repetida 10 vezes
-- Total: 1.000 medições
+## 2.7. Tipo de Projeto Experimental
 
-### 2.8. Quantidade de Medições
+### Design: *Within-Subjects* (Medidas Repetidas) com Progressão Incremental
 
-perguntar pro prof
+Cada repositório é testado com **AMBAS** as APIs (GraphQL e REST)
 
-### 2.9. Ameaças à Validade
-
-#### Validade Interna:
-
-1. **Rate limiting**: GitHub limita requisições (5.000/hora REST, 
-pontos dinâmicos no GraphQL)
-- **Mitigação**: Monitoramento ativo via endpoint `/rate_limit`, 
-  pausas automáticas quando restantes < 200, distribuição temporal
-
-2. **Cache**: Respostas podem estar em cache do GitHub
-- **Mitigação**: Headers `Cache-Control: no-cache`, execução 
-  distribuída no tempo, randomização da ordem
-
-3. **Condições de rede**: Variações na latência e throughput
-- **Mitigação**: 10 repetições por condição, execução em horários 
-  variados, mesma máquina/rede para todas medições
-
-4. **Efeitos de ordem**: Primeira execução pode ser diferente das 
-subsequentes
-- **Mitigação**: Randomização completa da ordem de execução dos 
-  tratamentos
-
-#### Validade Externa:
-
-1. **Tamanho dos repositórios**: Apenas repositórios muito populares 
-(>50k estrelas)
-- **Mitigação**: Análise exploratória de correlação entre número 
-  de estrelas e métricas. Documentar esta limitação explicitamente.
-
-2. **Generalização para outras APIs**: Resultados específicos da 
-implementação do GitHub
-- **Mitigação**: Documentar características específicas das APIs 
-  do GitHub. Resultados podem não generalizar para outras 
-  implementações de GraphQL/REST.
+### Estrutura
+- Cada repositório → REST (T1)  
+- Cada repositório → GraphQL (T2)  
+- Ordem **completamente randomizada** dentro de cada fase  
+- Intervalo entre requisições: **1–2 segundos**  
+- Intervalo entre fases: análise preliminar  
 
 
-#### Validade de Construção:
+---
 
-1. **Métricas incluem latência de rede**: Tempo medido inclui rede, 
-não apenas processamento da API
-- **Mitigação**: Usar mesma máquina/rede/horários para todas 
-  medições. Tempo end-to-end é mais realista para desenvolvedores.
+## 2.8. Quantidade de Medições
+
+### Estrutura de Medições
+**Repetições por condição:** 10 execuções
+
+### Total por fase
+- Fase 1: 60 × 2 × 10 = **1.200 medições**  
+- Fase 2: 70 × 2 × 10 = **1.400 medições**  
+- Fase 3: 80 × 2 × 10 = **1.600 medições**  
+- Fase 4: 90 × 2 × 10 = **1.800 medições**  
+- Fase 5: 100 × 2 × 10 = **2.000 medições**  
+
+**Total acumulado:** **8.000 medições**
+
+---
+
+## 2.9. Ameaças à Validade
+
+### **Validade Interna**
+
+#### Rate limiting progressivo
+**Problema:** 8.000 medições podem ultrapassar limites do GitHub.  
+**Mitigação:**  
+- Monitorar `/rate_limit`  
+- Análise incremental para detectar impacto
+
+#### Efeito de aprendizado entre fases
+**Problema:** Cache/otimizações do GitHub podem alterar resultados entre fases.  
+**Mitigação:**  
+- Reexecutar todos os repositórios de cada fase  
+- `Cache-Control: no-cache`  
+- Randomização total  
+
+#### Condições de rede variáveis
+**Problema:** Mudanças na rede entre fases.  
+**Mitigação:**  
+- Mesma máquina e conexão  
+- Registro de timestamps  
+- Modelagem com fase como covariável  
+
+#### Fadiga do sistema
+**Problema:** Degradação local de recursos.  
+**Mitigação:**  
+- Reiniciar script entre fases  
+- Monitoramento CPU/memória  
+
+---
+
+### **Validade Externa**
+
+#### Tamanho e popularidade dos repositórios
+**Problema:** Apenas repositórios com >50k estrelas.  
+**Mitigação:**  
+- Amostra de 100 aumenta diversidade  
+- Análise de correlação com tamanho/estrelas  
+
+
+---
+
+### **Validade de Construção**
+
+#### Latência de rede
+**Mitigação:**
+- Mesma rede → condições equivalentes  
+- Métrica end-to-end é realista
 
 
 ---
