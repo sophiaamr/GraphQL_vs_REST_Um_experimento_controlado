@@ -14,6 +14,7 @@
 As APIs (Application Programming Interfaces) são fundamentais para a comunicação entre sistemas distribuídos na Web. O estilo arquitetural REST (Representational State Transfer) tem sido o paradigma dominante por décadas, mas novas abordagens têm surgido para atender às demandas de aplicações mais complexas.
 
 O GraphQL, desenvolvido pelo Facebook em 2012, representa uma dessas alternativas. Diferentemente do REST, que utiliza múltiplos endpoints fixos, o GraphQL oferece um único endpoint onde os clientes especificam exatamente quais dados necessitam, prometendo maior flexibilidade e eficiência.
+Apesar da crescente adoção do GraphQL e de relatos de migração de sistemas de REST para GraphQL, ainda não está claro, de forma quantitativa, quais são os reais benefícios dessa abordagem em comparação às APIs REST.
 
 ### 2.1. Questões de Pesquisa (Research Questions – RQs)
 **Questões de Pesquisa - Research Questions (RQs):**
