@@ -243,3 +243,11 @@ A ordem de execução é completamente aleatória, combinando repositório e API
 Como controles experimentais, todas as chamadas são feitas com o cabeçalho `Cache-Control: no-cache`, utilizando tokens de autenticação pessoais equivalentes, seguindo a mesma configuração de coleta, ainda que as execuções tenham sido realizadas em máquinas diferentes e em horários distintos. Além disso, o experimento implementa uma pausa automática sempre que o rate limit residual cai abaixo de 200, evitando estouro de limite na API do GitHub.
 
 ---
+
+## 4. Conclusão
+
+O experimento mostrou que o GraphQL é a melhor escolha para este cenário.
+
+A grande vantagem dele está no tamanho da resposta (RQ2). Como o GraphQL permite pedir só o que precisa, ele trafega um volume de dados minúsculo (21 KB) comparado ao peso desnecessário do REST (1.3 MB).
+
+Essa eficiência no tamanho impacta diretamente o tempo (RQ1): por não entupir a rede com dados inúteis, o GraphQL conseguiu se manter estável e rápido mesmo nas fases de estresse máximo (100 usuários), enquanto o REST perdeu performance tentando processar e enviar o excesso de informações.
