@@ -206,7 +206,6 @@ Cada repositório será testado **1 vez** com cada API (REST e GraphQL)
 #### Tamanho e popularidade dos repositórios
 **Problema:** Apenas repositórios com >50k estrelas.  
 **Mitigação:**  
-- Amostra de 100 aumenta diversidade  
 - Análise de correlação com tamanho/estrelas  
 
 
@@ -214,32 +213,32 @@ Cada repositório será testado **1 vez** com cada API (REST e GraphQL)
 
 ### **Validade de Construção**
 
-#### Latência de rede
+#### Medição do tempo de resposta
+**Problema:** O tempo medido inclui latência de rede, que pode variar entre execuções.
 **Mitigação:**
-- Mesma rede = condições equivalentes 
-
+- Medição end-to-end (realista para cenários de uso real)
+- Randomização da ordem minimiza viés de flutuações de rede
 
 ---
 
 ## 3. Metodologia
 
+CCada repositório é testado com ambas as APIs (REST e GraphQL), permitindo comparação direta.
 
----
+### 3.2. Seleção dos Objetos
 
-## 4. Dificuldades
+Os objetos de estudo são repositórios públicos do GitHub com pelo menos 50.000 estrelas. Eles são selecionados por meio de uma busca dinâmica utilizando a GitHub Search API, com o filtro `stars:>=50000` e ordenação por número de estrelas em ordem decrescente. A quantidade de repositórios é configurável por fase do experimento, podendo variar entre 60, 70, 80, 90 e 100 repositórios.
 
+### 3.3. Coleta de Dados
 
----
+Na abordagem REST, a coleta é feita por meio de múltiplas requisições para obter dados básicos do repositório, linguagens utilizadas, issues (até 60), pull requests (10 com reviews), commits (60) e contribuidores (20), resultando em aproximadamente 16 requisições por repositório. Já na abordagem GraphQL, os mesmos dados são obtidos em uma query aninhada principal por repositório, podendo haver pequenas variações no número de requisições em função de paginação, reexecuções pontuais ou ajustes de coleta.
 
-### 5 Métricas
+Durante a coleta, são capturadas as seguintes métricas: tempo de resposta (em milissegundos), tamanho da resposta (em bytes), número de requisições realizadas e informações de rate limit (estado antes e depois, quantidade consumida e custo da operação).
 
----
+### 3.4. Procedimento
 
-## 6. Resultados & Discussões
+A ordem de execução é completamente aleatória, combinando repositório e API (REST ou GraphQL). As medições de tempo são realizadas com `time.perf_counter()`, para garantir maior precisão, e é respeitado um intervalo fixo de 1,5 segundos entre as requisições.
 
----
-
-## 7. Conclusão
- 
+Como controles experimentais, todas as chamadas são feitas com o cabeçalho `Cache-Control: no-cache`, utilizando tokens de autenticação pessoais equivalentes, seguindo a mesma configuração de coleta, ainda que as execuções tenham sido realizadas em máquinas diferentes e em horários distintos. Além disso, o experimento implementa uma pausa automática sempre que o rate limit residual cai abaixo de 200, evitando estouro de limite na API do GitHub.
 
 ---
