@@ -217,7 +217,6 @@ Cada repositório será testado **1 vez** com cada API (REST e GraphQL)
 #### Medição do tempo de resposta
 **Problema:** O tempo medido inclui latência de rede, que pode variar entre execuções.
 **Mitigação:**
-- Medição end-to-end (realista para cenários de uso real)
 - Randomização da ordem minimiza viés de flutuações de rede
 
 ---
