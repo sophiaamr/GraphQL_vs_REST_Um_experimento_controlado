@@ -44,8 +44,6 @@ H1: Respostas GraphQL apresentam tamanho significativamente menor que REST
 
 **Tamanho da Resposta (bytes)**: Tamanho do payload da resposta em bytes
 
-**Número de requisições necessárias**: Quantidade de chamadas HTTP realizadas
-
 **Métricas de Rate Limit**:
 - Rate limit antes da requisição
 - Rate limit após a requisição
@@ -73,10 +71,7 @@ Ambos os tratamentos coletam o mesmo conjunto de informações:
 - Datas: criação, última atualização
 - Linguagem principal
 
-**2. Linguagens utilizadas no repositório**
-- Lista completa de linguagens com percentuais
-
-**3. Issues abertas (60 mais recentes)**
+**2. Issues abertas (60 mais recentes)**
 - Título, número, estado
 - Data de criação
 - Autor (login)
@@ -88,7 +83,6 @@ Ambos os tratamentos coletam o mesmo conjunto de informações:
 - Autor (login)
 - Status de merge
 - **Reviews associados (apenas dos 10 primeiros PRs)**
-  - Limitação aplicada em ambas APIs para viabilidade de rate limit
   - Até 10 reviews por PR
 - Estado do review (approved/changes_requested)
 - Revisor
@@ -142,8 +136,6 @@ Cada repositório é testado com ambas as APIs (GraphQL e REST)
 - Cada repositório → GraphQL (T2)  
 - Ordem **completamente randomizada** dentro de cada fase  
 - Intervalo entre requisições: **1–2 segundos**  
-- Intervalo entre fases: análise preliminar  
-
 
 ---
 
@@ -217,7 +209,6 @@ Cada repositório será testado **1 vez** com cada API (REST e GraphQL)
 #### Medição do tempo de resposta
 **Problema:** O tempo medido inclui latência de rede, que pode variar entre execuções.
 **Mitigação:**
-- Medição end-to-end (realista para cenários de uso real)
 - Randomização da ordem minimiza viés de flutuações de rede
 
 ---
