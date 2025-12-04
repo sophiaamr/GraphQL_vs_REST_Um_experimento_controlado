@@ -135,7 +135,7 @@ O experimento será executado em **5 fases progressivas** para permitir análise
 
 ### Design: *Within-Subjects* (Medidas Repetidas) com Progressão Incremental
 
-Cada repositório é testado com **AMBAS** as APIs (GraphQL e REST)
+Cada repositório é testado com ambas as APIs (GraphQL e REST)
 
 ### Estrutura
 - Cada repositório → REST (T1)  
